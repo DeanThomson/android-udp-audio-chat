@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">UDPchat</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="enterIP">IP address to call:</string>
+    <string name="send">Send</string>
+    <string name="receive">Receive</string>
+    <string name="thisIP"></string>
+    <string name="stop">Stop</string>
+    <string name="startCall">Start call</string>
+
+</resources>
