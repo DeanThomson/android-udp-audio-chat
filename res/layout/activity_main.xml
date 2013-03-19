@@ -11,44 +11,81 @@
     tools:context=".MainActivity" >
 
     <TextView
-        android:id="@+id/ipText"
+        android:id="@+id/textViewEnterName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/enterIP" />
-
-    <EditText
-        android:id="@+id/ipAddress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="text" >
-
-        <requestFocus />
-    </EditText>
+        android:text="@string/enterName" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
-        <Button
-            android:id="@+id/startCall"
+        <EditText
+            android:id="@+id/editTextDisplayName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/startCall" />
+            android:layout_weight="1"
+            android:ems="10"
+            android:inputType="text"
+            android:maxLength="15"
+            android:singleLine="true" >
+
+            <requestFocus />
+        </EditText>
 
         <Button
-            android:id="@+id/stop"
+            android:id="@+id/buttonStart"
+            style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/stop" />
-
+            android:layout_weight="1"
+            android:text="@string/submitName" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/thisIP"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/thisIP"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+
+        <TextView
+            android:id="@+id/textViewSelectContact"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/selectContact"
+            android:visibility="invisible" />
+
+        <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+            <Button
+                android:id="@+id/buttonUpdate"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/update"
+                android:visibility="invisible" />
+	    
+            <Button
+	            android:id="@+id/buttonCall"
+	            style="?android:attr/buttonStyleSmall"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:text="@string/call"
+	            android:visibility="invisible" />
+	 	</LinearLayout>
+    
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible" >
+
+        <RadioGroup
+            android:id="@+id/contactList"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+                
+        </RadioGroup>
+    </ScrollView>
+
+   
 
 </LinearLayout>

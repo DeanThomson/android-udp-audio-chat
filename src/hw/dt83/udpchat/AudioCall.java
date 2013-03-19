@@ -27,33 +27,41 @@ public class AudioCall {
 	private static final int BUF_SIZE = SAMPLE_INTERVAL * SAMPLE_INTERVAL * SAMPLE_SIZE * 2; //Bytes
 	
 	public AudioCall(InetAddress address, int port) {
+		
 		this.address = address;
 		this.port = port;
 	}
 	
 	public void startCall() {
+		
 		startMic();
 		startSpeakers();
 	}
 	
 	public void endCall() {
+		
 		muteMic();
 		muteSpeakers();
 	}
 	
 	public void muteMic() {
+		
 		mic = false;
 	}
 	
 	public void muteSpeakers() {
+		
 		speakers = false;
 	}
 	
 	public void startMic() {
+		
 		mic = true;
 		Thread thread = new Thread(new Runnable() {
+			
 			@Override
 			public void run() {
+				
 				Log.i(LOG_TAG, "Send thread started. Thread id: " + Thread.currentThread().getId());
 				AudioRecord audioRecorder = new AudioRecord (MediaRecorder.AudioSource.MIC, SAMPLE_RATE,
 						AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, 
@@ -62,10 +70,12 @@ public class AudioCall {
 				int bytes_sent = 0;
 				byte[] buf = new byte[BUF_SIZE];
 				try {
+					
 					Log.i(LOG_TAG, "Packet destination: " + address.toString());
 					DatagramSocket socket = new DatagramSocket();
 					audioRecorder.startRecording();
 					while(mic) {
+						
 						bytes_read = audioRecorder.read(buf, 0, BUF_SIZE);
 						DatagramPacket packet = new DatagramPacket(buf, bytes_read, address, port);
 						socket.send(packet);
@@ -81,18 +91,22 @@ public class AudioCall {
 					return;
 				}
 				catch(InterruptedException e) {
+					
 					Log.e(LOG_TAG, "InterruptedException: " + e.toString());
 					mic = false;
 				}
 				catch(SocketException e) {
+					
 					Log.e(LOG_TAG, "SocketException: " + e.toString());
 					mic = false;
 				}
 				catch(UnknownHostException e) {
+					
 					Log.e(LOG_TAG, "UnknownHostException: " + e.toString());
 					mic = false;
 				}
 				catch(IOException e) {
+					
 					Log.e(LOG_TAG, "IOException: " + e.toString());
 					mic = false;
 				}
@@ -102,19 +116,25 @@ public class AudioCall {
 	}
 	
 	public void startSpeakers() {
+		
 		if(!speakers) {
+			
 			speakers = true;
 			Thread receiveThread = new Thread(new Runnable() {
+				
 				@Override
 				public void run() {
+					
 					Log.i(LOG_TAG, "Receive thread started. Thread id: " + Thread.currentThread().getId());
 					AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO,
 							AudioFormat.ENCODING_PCM_16BIT, BUF_SIZE, AudioTrack.MODE_STREAM);
 					track.play();
 					try {
+						
 						DatagramSocket socket = new DatagramSocket(port);
 						byte[] buf = new byte[BUF_SIZE];
 						while(speakers) {
+							
 							DatagramPacket packet = new DatagramPacket(buf, BUF_SIZE);
 							socket.receive(packet);
 							Log.i(LOG_TAG, "Packet received: " + packet.getLength());
@@ -129,10 +149,12 @@ public class AudioCall {
 						return;
 					}
 					catch(SocketException e) {
+						
 						Log.e(LOG_TAG, "SocketException: " + e.toString());
 						speakers = false;
 					}
 					catch(IOException e) {
+						
 						Log.e(LOG_TAG, "IOException: " + e.toString());
 						speakers = false;
 					}
