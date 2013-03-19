@@ -5,6 +5,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -60,7 +61,8 @@ public class MainActivity extends Activity {
 				ScrollView scrollView = (ScrollView) findViewById(R.id.scrollView);
 				scrollView.setVisibility(View.VISIBLE);
 				
-				contactManager = new ContactManager(displayName, getBroadcastIp());				
+				contactManager = new ContactManager(displayName, getBroadcastIp());
+				updateContactList();
 			}
 		});
 		
@@ -71,6 +73,15 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				
 				updateContactList();
+			}
+		});
+		
+		final Button btnCall = (Button) findViewById(R.id.buttonCall);
+		btnCall.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				contactManager.bye(displayName);
 			}
 		});
 	}
@@ -85,6 +96,7 @@ public class MainActivity extends Activity {
 			
 			RadioButton radioButton = new RadioButton(getBaseContext());
 			radioButton.setText(name);
+			radioButton.setTextColor(Color.BLACK);
 			radioGroup.addView(radioButton);
 		}
 	}
@@ -109,6 +121,7 @@ public class MainActivity extends Activity {
 	}
 	
 	private String toBroadcastIp(int ip) {
+		
 		return (ip & 0xFF) + "." +
 				((ip >> 8) & 0xFF) + "." +
 				((ip >> 16) & 0xFF) + "." +
@@ -117,23 +130,29 @@ public class MainActivity extends Activity {
 	
 	@Override
 	public void onPause() {
+		
 		super.onPause();
 		if(STARTED) {
 			
+			contactManager.bye(displayName);
 			contactManager.stopBroadcasting();
 			contactManager.stopListening();
+			STARTED = false;
 		}
 		Log.i(LOG_TAG, "App paused!");
 	}
 	
 	@Override
-	protected void onStop() {
+	public void onStop() {
+		
 		super.onStop();
 		if(STARTED) {
 			
+			contactManager.bye(displayName);
 			contactManager.stopBroadcasting();
 			contactManager.stopListening();
+			STARTED = false;
 		}
-		Log.i(LOG_TAG, "App stopped");
+		Log.i(LOG_TAG, "App stopped!");
 	}
 }

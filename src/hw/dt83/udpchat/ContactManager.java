@@ -13,16 +13,18 @@ import android.util.Log;
 public class ContactManager {
 
 	private static final String LOG_TAG = "ContactManager";
-	private static final int BROADCAST_PORT = 50001;
+	public static final int BROADCAST_PORT = 50001;
 	private static final int BROADCAST_INTERVAL = 10000;
 	private static final int BROADCAST_BUF_SIZE = 1024;
 	private boolean BROADCAST = true;
 	private boolean LISTEN = true;
 	private HashMap<String, InetAddress> contacts;
+	private InetAddress broadcastIP;
 	
 	public ContactManager(String name, InetAddress broadcastIP) {
 		
 		contacts = new HashMap<String, InetAddress>();
+		this.broadcastIP = broadcastIP;
 		listen();
 		broadcastName(name, broadcastIP);
 	}
@@ -37,13 +39,64 @@ public class ContactManager {
 		Log.i(LOG_TAG, "Attempting to add contact: " + name);
 		if(!contacts.containsKey(name)) {
 			
-			Log.i(LOG_TAG, "Adding contact");
+			Log.i(LOG_TAG, "Adding contact: " + name);
 			contacts.put(name, address);
 			Log.i(LOG_TAG, "#Contacts: " + contacts.size());
 			return;
 		}
 		Log.i(LOG_TAG, "Contact already exists: " + name);
 		return;
+	}
+	
+	public void removeContact(String name) {
+		
+		Log.i(LOG_TAG, "Attempting to add contact: " + name);
+		if(contacts.containsKey(name)) {
+			
+			Log.i(LOG_TAG, "Removing contact: " + name);
+			contacts.remove(name);
+			Log.i(LOG_TAG, "#Contacts: " + contacts.size());
+			return;
+		}
+		Log.i(LOG_TAG, "Cannot remove contact. " + name + " does not exist.");
+		return;
+	}
+	
+	public void bye(final String name) {
+		
+		Thread byeThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				try {
+					
+					Log.i(LOG_TAG, "Attempting to broadcast BYE notification!");
+					String notification = "BYE:"+name;
+					byte[] message = notification.getBytes();
+					Log.i(LOG_TAG, "1");
+					DatagramSocket socket = new DatagramSocket();
+					Log.i(LOG_TAG, "2");
+					socket.setBroadcast(true);
+					Log.i(LOG_TAG, "3");
+					DatagramPacket packet = new DatagramPacket(message, message.length, broadcastIP, BROADCAST_PORT);
+					Log.i(LOG_TAG, "4");
+					socket.send(packet);
+					Log.i(LOG_TAG, "Broadcast BYE notification!");
+					return;
+				}
+				catch(SocketException e) {
+					
+					Log.e(LOG_TAG, "SocketException during BYE notification: " + e);
+					return;
+				}
+				catch(IOException e) {
+					
+					Log.e(LOG_TAG, "IOException during BYE notification: " + e);
+				}
+			}
+		});
+		byeThread.start();
 	}
 	
 	public void broadcastName(final String name, final InetAddress broadcastIP) {
@@ -55,8 +108,10 @@ public class ContactManager {
 			public void run() {
 				
 				try {
+					
 					Log.i(LOG_TAG, "Broadcasting thread created!");
-					byte[] message = name.getBytes();
+					String request = "ADD:"+name;
+					byte[] message = request.getBytes();
 					DatagramSocket socket = new DatagramSocket();
 					socket.setBroadcast(true);
 					DatagramPacket packet = new DatagramPacket(message, message.length, broadcastIP, BROADCAST_PORT);
@@ -68,6 +123,8 @@ public class ContactManager {
 						Thread.sleep(BROADCAST_INTERVAL);
 					}
 					Log.i(LOG_TAG, "Broadcaster ending!");
+					socket.disconnect();
+					socket.close();
 					return;
 				}
 				catch(SocketException e) {
@@ -90,7 +147,6 @@ public class ContactManager {
 				}
 			}
 		});
-		
 		broadcastThread.start();
 	}
 	
@@ -125,6 +181,8 @@ public class ContactManager {
 					listen(socket, buffer);
 				}
 				Log.i(LOG_TAG, "Listener ending!");
+				socket.disconnect();
+				socket.close();
 				return;
 			}
 			
@@ -137,8 +195,23 @@ public class ContactManager {
 					socket.setSoTimeout(15000);
 					socket.receive(packet);
 					String data = new String(buffer, 0, packet.getLength());
-					Log.i(LOG_TAG, "Packet received from " + data);
-					addContact(data, packet.getAddress());
+					Log.i(LOG_TAG, "Packet received: " + data);
+					String action = data.substring(0, 4);
+					if(action.equals("ADD:")) {
+						
+						Log.i(LOG_TAG, "Listener received ADD request");
+						addContact(data.substring(4, data.length()), packet.getAddress());
+					}
+					else if(action.equals("BYE:")) {
+						
+						Log.i(LOG_TAG, "Listener received BYE request");
+						removeContact(data.substring(4, data.length()));
+					}
+					else {
+						
+						Log.w(LOG_TAG, "Listener received invalid request: " + action);
+					}
+					
 				}
 				catch(SocketTimeoutException e) {
 					
@@ -161,7 +234,6 @@ public class ContactManager {
 				}
 			}
 		});
-		
 		listenThread.start();
 	}
 	
