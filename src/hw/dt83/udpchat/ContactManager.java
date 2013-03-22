@@ -36,7 +36,6 @@ public class ContactManager {
 	
 	public void addContact(String name, InetAddress address) {
 		
-		Log.i(LOG_TAG, "Attempting to add contact: " + name);
 		if(!contacts.containsKey(name)) {
 			
 			Log.i(LOG_TAG, "Adding contact: " + name);
@@ -50,7 +49,6 @@ public class ContactManager {
 	
 	public void removeContact(String name) {
 		
-		Log.i(LOG_TAG, "Attempting to add contact: " + name);
 		if(contacts.containsKey(name)) {
 			
 			Log.i(LOG_TAG, "Removing contact: " + name);
@@ -74,21 +72,18 @@ public class ContactManager {
 					Log.i(LOG_TAG, "Attempting to broadcast BYE notification!");
 					String notification = "BYE:"+name;
 					byte[] message = notification.getBytes();
-					Log.i(LOG_TAG, "1");
 					DatagramSocket socket = new DatagramSocket();
-					Log.i(LOG_TAG, "2");
 					socket.setBroadcast(true);
-					Log.i(LOG_TAG, "3");
 					DatagramPacket packet = new DatagramPacket(message, message.length, broadcastIP, BROADCAST_PORT);
-					Log.i(LOG_TAG, "4");
 					socket.send(packet);
 					Log.i(LOG_TAG, "Broadcast BYE notification!");
+					socket.disconnect();
+					socket.close();
 					return;
 				}
 				catch(SocketException e) {
 					
 					Log.e(LOG_TAG, "SocketException during BYE notification: " + e);
-					return;
 				}
 				catch(IOException e) {
 					
@@ -109,13 +104,11 @@ public class ContactManager {
 				
 				try {
 					
-					Log.i(LOG_TAG, "Broadcasting thread created!");
 					String request = "ADD:"+name;
 					byte[] message = request.getBytes();
 					DatagramSocket socket = new DatagramSocket();
 					socket.setBroadcast(true);
 					DatagramPacket packet = new DatagramPacket(message, message.length, broadcastIP, BROADCAST_PORT);
-					
 					while(BROADCAST) {
 						
 						socket.send(packet);
@@ -163,7 +156,6 @@ public class ContactManager {
 			@Override
 			public void run() {
 				
-				Log.i(LOG_TAG, "Listening thread started!");
 				DatagramSocket socket;
 				try {
 					
@@ -216,8 +208,10 @@ public class ContactManager {
 				catch(SocketTimeoutException e) {
 					
 					Log.i(LOG_TAG, "No packet received!");
-					if(LISTEN)
+					if(LISTEN) {
+					
 						listen(socket, buffer);
+					}
 					return;
 				}
 				catch(SocketException e) {

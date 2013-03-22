@@ -16,20 +16,19 @@ import android.util.Log;
 
 public class AudioCall {
 
-	private static final String LOG_TAG = "UDPChat";
+	private static final String LOG_TAG = "AudioCall";
 	private static final int SAMPLE_RATE = 8000;
 	private static final int SAMPLE_INTERVAL = 20; // Milliseconds
 	private static final int SAMPLE_SIZE = 2; // Bytes
 	private static final int BUF_SIZE = SAMPLE_INTERVAL * SAMPLE_INTERVAL * SAMPLE_SIZE * 2; //Bytes
 	private InetAddress address; // Address to call
-	private int port; // Port the packets are addressed to
+	private int port = 50000; // Port the packets are addressed to
 	private boolean mic = false; // Enable mic?
 	private boolean speakers = false; // Enable speakers?
 	
-	public AudioCall(InetAddress address, int port) {
+	public AudioCall(InetAddress address) {
 		
 		this.address = address;
-		this.port = port;
 	}
 	
 	public void startCall() {
@@ -40,6 +39,7 @@ public class AudioCall {
 	
 	public void endCall() {
 		
+		Log.i(LOG_TAG, "Ending call!");
 		muteMic();
 		muteSpeakers();
 	}
