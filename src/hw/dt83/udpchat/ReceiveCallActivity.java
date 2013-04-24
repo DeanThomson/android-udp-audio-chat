@@ -54,14 +54,14 @@ public class ReceiveCallActivity extends Activity {
 			public void onClick(View v) {
 				
 				try {
-					
+					// Accepting call. Send a notification and start the call
 					sendMessage("ACC:");
 					InetAddress address = InetAddress.getByName(contactIp);
 					Log.i(LOG_TAG, "Calling " + address.toString());
 					IN_CALL = true;
 					call = new AudioCall(address);
 					call.startCall();
-					
+					// Hide the buttons as they're not longer required
 					Button accept = (Button) findViewById(R.id.buttonAccept);
 					accept.setEnabled(false);
 					
@@ -87,7 +87,7 @@ public class ReceiveCallActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				
+				// Send a reject notification and end the call
 				sendMessage("REJ:");
 				endCall();
 			}
@@ -105,7 +105,7 @@ public class ReceiveCallActivity extends Activity {
 	}
 	
 	private void endCall() {
-		
+		// End the call and send a notification
 		stopListener();
 		if(IN_CALL) {
 			
@@ -116,7 +116,7 @@ public class ReceiveCallActivity extends Activity {
 	}
 	
 	private void startListener() {
-		
+		// Creates the listener thread
 		LISTEN = true;
 		Thread listenThread = new Thread(new Runnable() {
 			
@@ -140,11 +140,11 @@ public class ReceiveCallActivity extends Activity {
 							Log.i(LOG_TAG, "Packet received from "+ packet.getAddress() +" with contents: " + data);
 							String action = data.substring(0, 4);
 							if(action.equals("END:")) {
-								
+								// End call notification received. End call
 								endCall();
 							}
 							else {
-								
+								// Invalid notification received.
 								Log.w(LOG_TAG, packet.getAddress() + " sent invalid message: " + data);
 							}
 						}
@@ -169,12 +169,12 @@ public class ReceiveCallActivity extends Activity {
 	}
 	
 	private void stopListener() {
-		
+		// Ends the listener thread
 		LISTEN = false;
 	}
 	
 	private void sendMessage(final String message) {
-		
+		// Creates a thread for sending notifications
 		Thread replyThread = new Thread(new Runnable() {
 			
 			@Override

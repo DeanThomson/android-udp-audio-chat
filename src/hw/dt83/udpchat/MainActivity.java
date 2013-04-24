@@ -49,6 +49,7 @@ public class MainActivity extends Activity {
 		Log.i(LOG_TAG, "UDPChat started");
 		
 		// START BUTTON
+		// Pressing this buttons initiates the main functionality
 		final Button btnStart = (Button) findViewById(R.id.buttonStart);
 		btnStart.setOnClickListener(new OnClickListener() {
 			
@@ -82,6 +83,7 @@ public class MainActivity extends Activity {
 		});
 		
 		// UPDATE BUTTON
+		// Updates the list of reachable devices
 		final Button btnUpdate = (Button) findViewById(R.id.buttonUpdate);
 		btnUpdate.setOnClickListener(new OnClickListener() {
 			
@@ -93,6 +95,7 @@ public class MainActivity extends Activity {
 		});
 		
 		// CALL BUTTON
+		// Attempts to initiate an audio chat session with the selected device
 		final Button btnCall = (Button) findViewById(R.id.buttonCall);
 		btnCall.setOnClickListener(new OnClickListener() {
 			
@@ -102,7 +105,7 @@ public class MainActivity extends Activity {
 				RadioGroup radioGroup = (RadioGroup) findViewById(R.id.contactList);
 				int selectedButton = radioGroup.getCheckedRadioButtonId();
 				if(selectedButton == -1) {
-					
+					// If no device was selected, present an error message to the user
 					Log.w(LOG_TAG, "Warning: no contact selected");
 					final AlertDialog alert = new AlertDialog.Builder(MainActivity.this).create();
 					alert.setTitle("Oops");
@@ -116,12 +119,13 @@ public class MainActivity extends Activity {
 					alert.show();
 					return;
 				}
-				
+				// Collect details about the selected contact
 				RadioButton radioButton = (RadioButton) findViewById(selectedButton);
 				String contact = radioButton.getText().toString();
 				InetAddress ip = contactManager.getContacts().get(contact);
 				IN_CALL = true;
 				
+				// Send this information to the MakeCallActivity and start that activity
 				Intent intent = new Intent(MainActivity.this, MakeCallActivity.class);
 				intent.putExtra(EXTRA_CONTACT, contact);
 				String address = ip.toString();
@@ -134,8 +138,9 @@ public class MainActivity extends Activity {
 	}
 	
 	private void updateContactList() {
-		
+		// Create a copy of the HashMap used by the ContactManager
 		HashMap<String, InetAddress> contacts = contactManager.getContacts();
+		// Create a radio button for each contact in the HashMap
 		RadioGroup radioGroup = (RadioGroup) findViewById(R.id.contactList);
 		radioGroup.removeAllViews();
 		
@@ -151,7 +156,7 @@ public class MainActivity extends Activity {
 	}
 	
 	private InetAddress getBroadcastIp() {
-		
+		// Function to return the broadcast address, based on the IP address of the device
 		try {
 			
 			WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
@@ -170,7 +175,7 @@ public class MainActivity extends Activity {
 	}
 	
 	private String toBroadcastIp(int ip) {
-		
+		// Returns converts an IP address in int format to a formatted string
 		return (ip & 0xFF) + "." +
 				((ip >> 8) & 0xFF) + "." +
 				((ip >> 16) & 0xFF) + "." +
@@ -178,7 +183,7 @@ public class MainActivity extends Activity {
 	}
 	
 	private void startCallListener() {
-		
+		// Creates the listener thread
 		LISTEN = true;
 		Thread listener = new Thread(new Runnable() {
 			
@@ -186,42 +191,43 @@ public class MainActivity extends Activity {
 			public void run() {
 				
 				try {
-				Log.i(LOG_TAG, "Incoming call listener started");
-				DatagramSocket socket = new DatagramSocket(LISTENER_PORT);
-				socket.setSoTimeout(1000);
-				byte[] buffer = new byte[BUF_SIZE];
-				DatagramPacket packet = new DatagramPacket(buffer, BUF_SIZE);
-				while(LISTEN) {
-					
-					try {
-						Log.i(LOG_TAG, "Listening for incoming calls");
-						socket.receive(packet);
-						String data = new String(buffer, 0, packet.getLength());
-						Log.i(LOG_TAG, "Packet received from "+ packet.getAddress() +" with contents: " + data);
-						String action = data.substring(0, 4);
-						if(action.equals("CAL:")) {
-							
-							String address = packet.getAddress().toString();
-							String name = data.substring(4, packet.getLength());
-							
-							Intent intent = new Intent(MainActivity.this, ReceiveCallActivity.class);
-							intent.putExtra(EXTRA_CONTACT, name);
-							intent.putExtra(EXTRA_IP, address.substring(1, address.length()));
-							IN_CALL = true;
-							//LISTEN = false;
-							//stopCallListener();
-							startActivity(intent);
+					// Set up the socket and packet to receive
+					Log.i(LOG_TAG, "Incoming call listener started");
+					DatagramSocket socket = new DatagramSocket(LISTENER_PORT);
+					socket.setSoTimeout(1000);
+					byte[] buffer = new byte[BUF_SIZE];
+					DatagramPacket packet = new DatagramPacket(buffer, BUF_SIZE);
+					while(LISTEN) {
+						// Listen for incoming call requests
+						try {
+							Log.i(LOG_TAG, "Listening for incoming calls");
+							socket.receive(packet);
+							String data = new String(buffer, 0, packet.getLength());
+							Log.i(LOG_TAG, "Packet received from "+ packet.getAddress() +" with contents: " + data);
+							String action = data.substring(0, 4);
+							if(action.equals("CAL:")) {
+								// Received a call request. Start the ReceiveCallActivity
+								String address = packet.getAddress().toString();
+								String name = data.substring(4, packet.getLength());
+								
+								Intent intent = new Intent(MainActivity.this, ReceiveCallActivity.class);
+								intent.putExtra(EXTRA_CONTACT, name);
+								intent.putExtra(EXTRA_IP, address.substring(1, address.length()));
+								IN_CALL = true;
+								//LISTEN = false;
+								//stopCallListener();
+								startActivity(intent);
+							}
+							else {
+								// Received an invalid request
+								Log.w(LOG_TAG, packet.getAddress() + " sent invalid message: " + data); 
+							}
 						}
-						else {
-							
-							Log.w(LOG_TAG, packet.getAddress() + " sent invalid message: " + data); 
-						}
+						catch(Exception e) {}
 					}
-					catch(Exception e) {}
-				}
-				Log.i(LOG_TAG, "Call Listener ending");
-				socket.disconnect();
-				socket.close();
+					Log.i(LOG_TAG, "Call Listener ending");
+					socket.disconnect();
+					socket.close();
 				}
 				catch(SocketException e) {
 					
@@ -233,7 +239,7 @@ public class MainActivity extends Activity {
 	}
 	
 	private void stopCallListener() {
-		
+		// Ends the listener thread
 		LISTEN = false;
 	}
 	

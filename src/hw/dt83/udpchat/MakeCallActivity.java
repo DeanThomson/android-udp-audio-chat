@@ -54,19 +54,19 @@ public class MakeCallActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				
+				// Button to end the call has been pressed
 				endCall();
 			}
 		});
 	}
 	
 	private void makeCall() {
-		
+		// Send a request to start a call
 		sendMessage("CAL:"+displayName, 50003);
 	}
 	
 	private void endCall() {
-		
+		// Ends the chat sessions
 		stopListener();
 		if(IN_CALL) {
 			
@@ -77,7 +77,7 @@ public class MakeCallActivity extends Activity {
 	}
 	
 	private void startListener() {
-		
+		// Create listener thread
 		LISTEN = true;
 		Thread listenThread = new Thread(new Runnable() {
 			
@@ -101,21 +101,21 @@ public class MakeCallActivity extends Activity {
 							Log.i(LOG_TAG, "Packet received from "+ packet.getAddress() +" with contents: " + data);
 							String action = data.substring(0, 4);
 							if(action.equals("ACC:")) {
-								
+								// Accept notification received. Start call
 								call = new AudioCall(packet.getAddress());
 								call.startCall();
 								IN_CALL = true;
 							}
 							else if(action.equals("REJ:")) {
-								
+								// Reject notification received. End call
 								endCall();
 							}
 							else if(action.equals("END:")) {
-								
+								// End call notification received. End call
 								endCall();
 							}
 							else {
-								
+								// Invalid notification received
 								Log.w(LOG_TAG, packet.getAddress() + " sent invalid message: " + data);
 							}
 						}
@@ -147,12 +147,12 @@ public class MakeCallActivity extends Activity {
 	}
 	
 	private void stopListener() {
-		
+		// Ends the listener thread
 		LISTEN = false;
 	}
 	
 	private void sendMessage(final String message, final int port) {
-		
+		// Creates a thread used for sending notifications
 		Thread replyThread = new Thread(new Runnable() {
 			
 			@Override
